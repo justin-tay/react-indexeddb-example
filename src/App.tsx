@@ -1,10 +1,26 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "./App.css";
+import { encryptText, getKey } from "./crypto";
+
+async function test() {
+  const key = await getKey();
+  const encryptedData = await encryptText(key, 'hello');
+  const base64String = btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
+  console.log(base64String);
+}
+
+async function persist() {
+  if (navigator.storage && navigator.storage.persist) {
+    const persisted = await navigator.storage.persist();
+    console.log(`Persisted storage granted: ${persisted}`);
+  }
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+  persist();
 
   return (
     <>
@@ -18,6 +34,11 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
+        <button onClick={() => test()}>
+          Test
+        </button>
+      </div>
+      <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
@@ -29,7 +50,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
