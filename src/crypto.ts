@@ -1,7 +1,8 @@
 import { db } from "./db";
 
 async function addKey(key: CryptoKey) {
-  return await db.keys.add({
+  return await db.keys.put({
+    id: 1,
     key,
   });
 }
@@ -29,13 +30,31 @@ async function generateKey() {
 
 async function encryptData(key: CryptoKey, data: BufferSource) {
   const iv = crypto.getRandomValues(new Uint8Array(12)); // 12-byte IV for AES-GCM
-  return await crypto.subtle.encrypt(
+  const encrypted = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: iv, // Initialization vector must be unique for each encryption
+      iv, // Initialization vector must be unique for each encryption
     },
     key, // The generated key
     data, // The text data to encrypt
+  );
+  const encryptedData = new Uint8Array(encrypted);
+  const result = new Uint8Array(iv.length + encryptedData.length);
+  result.set(iv);
+  result.set(encryptedData, iv.length);
+  return result;
+}
+
+async function decryptData(key: CryptoKey, data: ArrayBuffer) {
+  const iv = new Uint8Array(data.slice(0, 12)); // first 12 bytes
+  const encrypted = new Uint8Array(data.slice(12));
+  return await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv,
+    },
+    key, // The generated key
+    encrypted, // The text data to decrypt
   );
 }
 
@@ -45,4 +64,10 @@ async function encryptText(key: CryptoKey, text: string) {
     return await encryptData(key, data);
 }
 
-export { addKey, getKey, generateKey, encryptData, encryptText};
+async function decryptText(key: CryptoKey, data: ArrayBuffer) {
+  const decoder = new TextDecoder();
+  const chars = await decryptData(key, data);
+  return decoder.decode(chars);
+}
+
+export { addKey, getKey, generateKey, encryptData, encryptText, decryptData, decryptText};
