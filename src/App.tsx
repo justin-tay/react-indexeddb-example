@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import { encryptText, getKey } from "./crypto";
+import { db } from "./db";
 
-async function test() {
+async function encrypt(formData: any) {
   const key = await getKey();
-  const encryptedData = await encryptText(key, 'hello');
-  const base64String = btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
+  const encryptedData = await encryptText(key, formData.get("plaintext"));
+  const base64String = btoa(
+    String.fromCharCode(...new Uint8Array(encryptedData))
+  );
   console.log(base64String);
 }
 
@@ -19,8 +22,35 @@ async function persist() {
 }
 
 function App() {
+  const initialized = useRef(false);
   const [count, setCount] = useState(0);
   persist();
+
+  // run once
+  useEffect(() => {
+    if (!initialized.current) {
+      db.counter.get(1).then((result) => {
+        if (!result) {
+          // set initial value
+          db.counter.put({ id: 1, counter: count }).then(() => {
+            console.log("initialized");
+          });
+        } else {
+          setCount(result.counter);
+        }
+        initialized.current = true;
+      });
+    }
+  }, []);
+
+  // run each time count changes
+  useEffect(() => {
+    if (initialized.current) {
+      db.counter.update(1, { counter: count }).then(() => {
+        console.log("updated");
+      });
+    }
+  }, [count]);
 
   return (
     <>
@@ -34,9 +64,10 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => test()}>
-          Test
-        </button>
+        <form action={encrypt}>
+            <input name="plaintext"></input>
+            <button type="submit">Encrypt</button>
+        </form>
       </div>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
