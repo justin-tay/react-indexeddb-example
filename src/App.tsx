@@ -39,6 +39,46 @@ function App() {
     }
   }
 
+  async function onClick() {
+    db.handle.get(1).then(async (result) => {
+      let directoryHandle;
+      if (!result) {
+        directoryHandle = await (window as any).showDirectoryPicker({ id: 'data', startIn: 'documents', mode: 'readwrite' });
+        db.handle.put({id:1, handle: directoryHandle}).then(() => {
+          console.log("stored directory");
+        });
+      } else {
+        directoryHandle = result.handle;
+      }
+
+      await verifyPermission(directoryHandle, true);
+
+      const filename = `${crypto.randomUUID()}.txt`;
+      let fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+      let writable = await fileHandle.createWritable();
+      await writable.write(crypto.randomUUID());
+      await writable.close();
+      console.log(`wrote ${filename}`);
+    });
+  }
+
+  async function verifyPermission(fileHandle: any, readWrite: boolean) {
+    let options = {};
+    if (readWrite) {
+      options = { mode: 'readwrite'};
+    }
+    // Check if permission was already granted. If so, return true.
+    if ((await fileHandle.queryPermission(options)) === 'granted') {
+      return true;
+    }
+    // Request permission. If the user grants permission, return true.
+    if ((await fileHandle.requestPermission(options)) === 'granted') {
+      return true;
+    }
+    // The user didn't grant permission, so return false.
+    return false;
+  }
+
   persist();
 
   // run once
@@ -105,6 +145,9 @@ function App() {
             <button type="submit" name="action" value="decrypt">Decrypt</button>
           </li>
         </form>
+      </div>
+      <div className="card">
+          <button onClick={onClick}>Write</button>
       </div>
     </>
   );
