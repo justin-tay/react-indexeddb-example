@@ -54,3 +54,27 @@ export default tseslint.config({
   },
 })
 ```
+
+## Edge Policy
+
+Microsoft Edge can be configured via policies. When configured clicking on the `three dots icon` for `Settings and more` will display `Managed by your organization` with a briefcase icon.
+
+The policies can be easily viewed by going to `edge://policy`.
+
+Guidance should be taken from the [Microsoft Edge Security Technical Implementation Guide](https://stigviewer.com/stigs/microsoft_edge).
+
+### Prevent user from manually clearing site data
+
+There is no in-built policy to prevent the user from manually clearing the site data. If the user chooses to do so, site data such as IndexedDB will be cleared.
+
+One possible workaround is to disable the `Settings` page completely using the `URLBlocklist` policy.
+
+
+
+
+
+```
+SOFTWARE\Policies\Microsoft\Edge\WebAppInstallForceList = [{"create_desktop_shortcut": true, "default_launch_container": "window", "url": "https://localhost:4173"}]
+SOFTWARE\Policies\Microsoft\Edge\SaveCookiesOnExit\1 = "https://localhost:4173"
+SOFTWARE\Policies\Microsoft\Edge\URLBlocklist\1 = "edge://settings"
+```
