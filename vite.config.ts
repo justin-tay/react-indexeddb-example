@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
@@ -62,6 +63,12 @@ export default defineConfig(({ mode }) => {
   return {
     esbuild: {
       drop: production ? ['console', 'debugger'] : [],
+    },
+    server: {
+      https: {
+        key: fs.readFileSync('localhost.key'),
+        cert: fs.readFileSync('localhost.crt'),
+      }
     },
     plugins: [react(), VitePWA(pwaOptions)],
   };
