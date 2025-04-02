@@ -90,7 +90,7 @@ Microsoft Edge automatically clears the site data for the following reasons
 
 #### Storage Pressure
 
-There is no policy to disable automatic clearing of site data due to storage pressure. This can only be done using the `Storage API` with a call to []`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist).
+There is no policy to disable automatic clearing of site data due to storage pressure. This can only be done using the `Storage API` with a call to [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist).
 
 Note that Microsoft Edge does not prompt the user to ask for permission to persist and uses a heuristic to automatically determine if it will grant permission to persist.
 
