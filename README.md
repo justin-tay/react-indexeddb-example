@@ -272,3 +272,17 @@ $obj = Get-CimInstance -Namespace $namespaceName -ClassName $className
 $obj.Configuration = $null
 Set-CimInstance -CimInstance $obj
 ```
+
+For PWA additionally the following programs may be needed
+
+```xml
+          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge_proxy.exe" />
+          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\pwahelper.exe" />
+          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\134.0.3124.93\elevation_service.exe" />
+```
+
+To get the applications
+
+```powershell
+Get-StartApps
+```
