@@ -62,19 +62,37 @@ This API requires user interaction for permission but it is possible to acquire 
 
 The application can prompt the user to select a directory using a directory picker which can only start in predefined directories, defaulting to the `Documents` directory if not specified. The browser can choose not to let the user pick a particular directory with a `can't open the folder because it contains system files` message. After a directory is selected the user is asked `Let site edit files?`. It is not possible to ask at this time for persistent permission. When the browser is closed and reopened, the application can then prompt `View and edit files for the last time you visited this site` with 3 options, `Allow this time`, `Allow on every visit` and `Don't allow`. It is possible for the user to modify all these settings by clicking on the icon next to the browser address bar.
 
+Permissions can be controlled using the following policies
+
+* [`DefaultFileSystemReadGuardSetting`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#defaultfilesystemreadguardsetting)
+* [`DefaultFileSystemWriteGuardSetting`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#defaultfilesystemwriteguardsetting)
+* [`FileSystemReadAskForUrls`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#filesystemreadaskforurls)
+* [`FileSystemReadBlockedForUrls`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#filesystemreadaskforurls)
+* [`FileSystemWriteAskForUrls`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#filesystemwriteaskforurls)
+* [`FileSystemWriteBlockedForUrls`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#filesystemwriteblockedforurls)
+
 ## Microsoft Edge Policy
 
-Microsoft Edge can be configured via policies. When configured clicking on the `three dots icon` for `Settings and more` will display `Managed by your organization` with a briefcase icon.
+Microsoft Edge can be configured via [policies](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies). When configured clicking on the `three dots icon` for `Settings and more` will display `Managed by your organization` with a briefcase icon.
 
 The policies can be easily viewed by going to `edge://policy`.
 
-Guidance should be taken from the [Microsoft Edge Security Technical Implementation Guide](https://stigviewer.com/stigs/microsoft_edge) and CIS Benchmarks.
+Guidance can be taken from
+* CIS Microsoft Edge v3.0.0 [L1](https://www.tenable.com/audits/CIS_Microsoft_Edge_v3.0.0_L1) [L2](https://www.tenable.com/audits/CIS_Microsoft_Edge_v3.0.0_L2)
+* DISA STIG Edge [v2r2](https://www.tenable.com/audits/DISA_STIG_Microsoft_Edge_v2r2)
+* MSCT Edge [v131 v1.0.0](https://www.tenable.com/audits/MSCT_Microsoft_Edge_Version_131_v1.0.0)
+
+This can be configured via [Mobile Device Management](https://learn.microsoft.com/en-us/deployedge/configure-edge-with-mdm) or Group Policy Objects (GPOs).
+
+Configuring requires the Microsoft Edge Administration Template (`MSEdge.admx`). These can be found in the [STIG Group Policy Objects](https://public.cyber.mil/stigs/gpo/).
+
+The GPOs for MSCT and DISA STIG are freely available but the GPOs for CIS are found in their [CIS Build Kits](https://www.cisecurity.org/cis-securesuite/cis-securesuite-build-kit-content/build-kits-faq) which requires membership.
 
 ### Prevent user from manually clearing site data
 
 There is no in-built policy to prevent the user from manually clearing the site data. If the user chooses to do so, site data such as IndexedDB will be cleared.
 
-One possible workaround is to disable the `Settings` page completely using the `URLBlocklist` policy.
+One possible workaround is to disable the `Settings` page completely using the [`URLBlocklist`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#urlblocklist) policy.
 
 ```
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge\URLBlocklist]
@@ -110,7 +128,7 @@ if (navigator.storage && navigator.storage.persist) {
 
 By default Microsoft Edge does not clear cookies and other site data on exit.
 
-Note that the Microsoft Edge Security Technical Implementation Guide recommends that [Session only-based cookies must be enabled](https://stigviewer.com/stigs/microsoft_edge/2024-09-13/finding/V-260467). This sets the `DefaultCookiesSetting` policy to `4` which will clear cookies and other site data on exit. This was also previously recommended in [`CIS Google Chrome L2 v2.1.0`](https://www.tenable.com/audits/items/CIS_Google_Chrome_L2_v2.1.0.audit:28091ca4e07b20dbe8cdad39b5626de7) but has since been removed in `CIS Google Chrome L2 v3.0.0`. This is also not present in the [`CIS Microsoft Edge L2 v3.0.0`](https://www.tenable.com/audits/CIS_Microsoft_Edge_v3.0.0_L2).
+Note that the Microsoft Edge Security Technical Implementation Guide recommends that [Session only-based cookies must be enabled](https://stigviewer.com/stigs/microsoft_edge/2024-09-13/finding/V-260467). This sets the `DefaultCookiesSetting` policy to `4` which will clear cookies and other site data on exit. This was also previously recommended in [`CIS Google Chrome L2 v2.1.0`](https://www.tenable.com/audits/items/CIS_Google_Chrome_L2_v2.1.0.audit:28091ca4e07b20dbe8cdad39b5626de7) but has since been removed in `CIS Google Chrome L2 v3.0.0`. This is also not present in either [`CIS Microsoft Edge L1 v3.0.0`](https://www.tenable.com/audits/CIS_Microsoft_Edge_v3.0.0_L1) or [`CIS Microsoft Edge L2 v3.0.0`](https://www.tenable.com/audits/CIS_Microsoft_Edge_v3.0.0_L2).
 
 * Disabled (0, user's personal setting applies)
 * Allow all sites to set local data (1)
@@ -130,16 +148,20 @@ The `SaveCookiesOnExit` policy needs to be added to ensure that the browser does
 
 It is possible to set up a policy to automatically install a Progressive Web Application. This makes it more likely for the application's `Storage API` call to set the site data to be persistent to be successful.
 
+This can be done using the [`WebAppInstallForceList`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#webappinstallforcelist) policy.
+
 ```
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge]
-"WebAppInstallForceList"="[{\"create_desktop_shortcut\": true, \"default_launch_container\": \"window\", \"url\": \"https://localhost:4173\"}]"
+"WebAppInstallForceList"="[{\"create_desktop_shortcut\": false, \"default_launch_container\": \"window\", \"url\": \"https://localhost:4173\"}]"
 ```
+
+Installed PWAs can be found in `edge://apps`.
 
 ## Microsoft Edge Profile
 
-The `Cookies and other site data` are stored in the user's Local profile. This is typically `C:/Users/username/AppData/Local/Microsoft/Edge/UserData/Default`. The command line could typically include options `--profile-directory=Default` and `--site-per-process`. It is possible to specify a custom profile directory using the `--user-data-dir` parameter. If there is a need for the data to be shared among all the users the `ALLUSERSPROFILE`, referring to `%PROFILESFOLDER@\Public` could be used. Note that all users have access to the data in such a case.
+The `Cookies and other site data` are stored in the user's Local profile. This is typically `C:/Users/username/AppData/Local/Microsoft/Edge/UserData/Default`. It is possible to specify a custom profile directory using the `--user-data-dir` parameter. If there is a need for the data to be shared among all the users the `Public` user could be used. Note that all users have access to the data in such a case. This is also configurable using the [`UserDataDir`](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#userdatadir) policy.
 
-The `AppData` directory is hidden by default in Windows File Explorer, but is still accessible by the user.
+The `AppData` directory is hidden by default in Windows File Explorer, but is typically still accessible by the user.
 
 It is possible to check the profile in use in Microsoft Edge using `edge://version`.
 
@@ -158,7 +180,7 @@ In the face of a cross-site script, it is only possible to make it such that the
 
 ## Kiosk
 
-Both [Microsoft Windows](https://learn.microsoft.com/en-us/windows/configuration/kiosk/) and [Microsoft Edge](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-configure-kiosk-mode) have a kiosk mode. Note that Microsoft Edge's kiosk mode is not suitable for Progressive Web Applications as it operates in InPrivate browsing mode.
+Both [Microsoft Windows](https://learn.microsoft.com/en-us/windows/configuration/kiosk/) and [Microsoft Edge](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-configure-kiosk-mode) have a kiosk mode. Note that Microsoft Edge's kiosk mode is not suitable for Progressive Web Applications that needs to persist data as it operates in [InPrivate](https://support.microsoft.com/en-us/microsoft-edge/browse-inprivate-in-microsoft-edge-cd2c9a48-0bc4-b98e-5e46-ac40c84e27e2) browsing mode.
 
 Microsoft Windows offers two kiosk modes
 
@@ -174,7 +196,24 @@ Both run in a Microsoft Edge InPrivate session.
 
 ### Multi-app kiosk with Assigned Access
 
-This can be configured using [Powershell](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/configure-multi-app-kiosk?tabs=ps). [Examples](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/examples?pivots=windows-11) can be found from [Microsoft](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/quickstart-restricted-user-experience?tabs=ps&pivots=windows-11).
+When Assigned Access is applied on a device it will apply certain [Assigned Access policy settings](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/policy-settings) using a combination of configuration service provider (CSP) and group policy (GPO) settings.
+
+This can be configured using
+
+* [Intune / Policy Configuration Service Providers (CSPs)](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/configure-multi-app-kiosk?tabs=intune)
+* [Provisioning Package](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/configure-multi-app-kiosk?tabs=ppkg) created using Windows Configuration Designer
+* [Powershell](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/configure-multi-app-kiosk?tabs=ps)
+
+Configuration examples
+
+* [Assigned Access XML examples](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/examples?pivots=windows-11)
+* [Quickstart: Configure a multi-app kiosk](https://learn.microsoft.com/en-us/windows/configuration/assigned-access/quickstart-restricted-user-experience?tabs=ps&pivots=windows-11)
+
+#### Powershell
+
+It is recommended that a virtual machine is used for testing as the Kiosk functionality will activate [AppLocker](https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/applocker/applocker-overview).
+
+The [PsExec](https://learn.microsoft.com/en-us/sysinternals/downloads/psexec) tool is used as the command requires the use of the `SYSTEM` account. 
 
 * Download the psexec tool
 * Open an elevated prompt and run `psexec.exe -i -s powershell.exe`
@@ -263,7 +302,7 @@ The following is a sample configuration
 </AssignedAccessConfiguration>
 ```
 
-The configuration can be removed
+The configuration can be removed using the following script.
 
 ```powershell
 $namespaceName="root\cimv2\mdm\dmmap"
@@ -273,16 +312,43 @@ $obj.Configuration = $null
 Set-CimInstance -CimInstance $obj
 ```
 
-For PWA additionally the following programs may be needed
+The following needs to be in the allowed apps list to pin elements with [Microsoft Edge secondary tiles](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/customize-the-windows-11-start-menu#example-web-pin)
 
-```xml
-          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge_proxy.exe" />
-          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\pwahelper.exe" />
-          <App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\134.0.3124.93\elevation_service.exe" />
-```
+* `<App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge_proxy.exe" />`
+* `<App AppUserModelId="Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App"/>`
 
-To get the applications
+The following needs to be in the allowed apps list to explicitly run as a PWA.
+
+* `<App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge_proxy.exe" />`
+* `<App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\pwahelper.exe" />`
+* `<App DesktopAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\134.0.3124.93\elevation_service.exe" />`
+
+Alternatively the URL to the PWA can be launched using the `--app` switch.
+
+The `smallIcon` and `largeIcon` are a Base64 encoded PNGs
+
+The following are [recommended sizes](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/icon-theme-color#icon-image-sizes)
+
+* App Icon: 44x44
+* Medium Tile: 150x150
+
+The [Get-StartApps](https://learn.microsoft.com/en-us/powershell/module/startlayout/get-startapps?view=windowsserver2025-ps) cmdlet can be used to get the AppIDs.
 
 ```powershell
 Get-StartApps
 ```
+
+## Windows Group Policy
+
+Windows applies Group Policy Objects in the following order where the last writer wins
+
+* Local Group Policy
+* Administrators Local Group Policy (OR) Non-Administrators Local Group Policy
+* Local User Policy
+* Domain Group Policy
+
+Note that in addition to Group Policy Objects (GPOs). Policies can also be configured with Configuration Service Providers (CSPs). The [ControlPolicyConflict](https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-controlpolicyconflict) CSP can be used in this case to control precedence.
+
+GPOs can be applied locally using the [`LGPO`](https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/security-compliance-toolkit-10#what-is-the-local-group-policy-object-lgpo-tool) tool found in the [Microsoft Security Compliance Toolkit](https://www.microsoft.com/en-us/download/details.aspx?id=55319).
+
+It is recommended that the [Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/) is used when creating and testing GPOs.

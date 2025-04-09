@@ -1,0 +1,10 @@
+<Configuration>
+  <VGpu>Enable</VGpu>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>c:\share</HostFolder>
+      <SandboxFolder>c:\share</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+</Configuration>
